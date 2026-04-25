@@ -1,0 +1,78 @@
+{
+  "indicators": [
+    {
+      "id": "humidity",
+      "label": "Humidity",
+      "icon": "💧",
+      "type": "raw",
+      "allowedUnits": [
+        { "value": "%", "label": "Percentage (%)" }
+      ]
+    },
+    {
+      "id": "temperature",
+      "label": "Temperature",
+      "icon": "🌡️",
+      "type": "raw",
+      "allowedUnits": [
+        { "value": "°C", "label": "Celsius (°C)" },
+        { "value": "F", "label": "Fahrenheit (°F)" }
+      ]
+    },
+    {
+      "id": "light_level",
+      "label": "Light Level",
+      "icon": "☀️",
+      "type": "raw",
+      "allowedUnits": [
+        { "value": "lux", "label": "Lux" }
+      ]
+    },
+    {
+      "id": "energy_usage",
+      "label": "Energy Usage",
+      "icon": "⚡",
+      "type": "raw",
+      "allowedUnits": [
+        { "value": "kWh", "label": "Kilowatt-hours (kWh)" },
+        { "value": "J", "label": "Joules (J)" },
+        { "value": "W", "label": "Watts (W)" }
+      ]
+    },
+    {
+      "id": "carbon_footprint",
+      "label": "Carbon Footprint",
+      "icon": "🌱",
+      "type": "raw",
+      "allowedUnits": [
+        { "value": "kgCO2e", "label": "kg CO2 equivalent" }
+      ]
+    },
+    {
+      "id": "thermal_sensation",
+      "label": "Thermal Sensation",
+      "icon": "🧠",
+      "type": "calculated",
+      "formulas": [
+        {
+          "id": "cold_climate",
+          "label": "Thermal Sensation (Cold <=10°)",
+          "expression": "13.12 + 0.6215 * T -11.37 * (V^0.16) + 0.3965 * T * (V^0.16)",
+          "variables": [
+            { "id": "T", "unit": "°C" },
+            { "id": "V", "unit": "km/h" }
+          ]
+        },
+        {
+          "id": "hot_climate",
+          "label": "Thermal Sensation (Hot >=27°)",
+          "expression": "-8.784 + 1.611 * T + 2.34 * H - 0.146 * T * H",
+          "variables": [
+            { "id": "T", "unit": "°C" },
+            { "id": "H", "unit": "%" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "name": "bpmn-sustainability-extension",
+  "version": "1.0.0",
+  "description": "A BPMN 2.0 extension for modeling and tracking IoT sustainability data",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "keywords": [
+    "bpmn",
+    "bpmn-js",
+    "sustainability",
+    "iot",
+    "extension",
+    "properties-panel"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@bpmn-io/properties-panel": ">= 3.0.0",
+    "bpmn-js": ">= 11.0.0",
+    "bpmn-js-properties-panel": ">= 5.0.0",
+    "htm": "^3.1.0",
+    "preact": "^10.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "babel-loader": "^9.1.3",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

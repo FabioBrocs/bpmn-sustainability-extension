@@ -1,0 +1,38 @@
+{
+  "name": "Sustainability",
+  "prefix": "sust",
+  "uri": "http://sustainability",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "SustainabilityData",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "indicators", "type": "Indicator", "isMany": true }
+      ]
+    },
+    {
+      "name": "Indicator",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "name", "isAttr": true, "type": "String" },
+        { "name": "formula", "isAttr": true, "type": "String" },
+        { "name": "measurements", "type": "Measurement", "isMany": true }
+      ]
+    },
+    {
+      "name": "Measurement",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "name", "isAttr": true, "type": "String" },
+        { "name": "type", "isAttr": true, "type": "String" }, 
+        { "name": "formulaId", "isAttr": true, "type": "String" }, 
+        { "name": "formula", "isAttr": true, "type": "String" },
+        { "name": "measurements", "type": "Measurement", "isMany": true }
+      ]
+    }
+  ]
+}
