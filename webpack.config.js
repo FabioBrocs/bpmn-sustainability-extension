@@ -26,11 +26,10 @@ module.exports = {
     ]
   },
   externals: [
-    function ({ request }, callback) {
-      if (/^(bpmn-js|@bpmn-io|bpmn-js-properties-panel|preact|htm)(\/.*)?$/.test(request)) {
-        return callback(null, 'commonjs ' + request);
-      }
-      callback();
-    }
+    /^bpmn-js(\/.*)?$/,
+    /^@bpmn-io(\/.*)?$/,
+    /^bpmn-js-properties-panel(\/.*)?$/,
+    /^preact(\/.*)?$/,
+    /^htm(\/.*)?$/
   ]
 };

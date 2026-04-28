@@ -16,7 +16,6 @@ export default function SustainabilityOverlays(eventBus, overlays, elementRegist
 
     const sustData = getSustData(element.businessObject);
     const indicators = sustData?.get('indicators') || [];
-    
     const validIndicators = indicators.filter(ind => ind.get('name')?.trim() !== '');
 
     if (validIndicators.length > 0) {
@@ -29,13 +28,17 @@ export default function SustainabilityOverlays(eventBus, overlays, elementRegist
 
       const containerDOM = createOverlayNode(validIndicators, isExpanded, handleToggle);
 
+      const overlayPosition = isExpanded 
+        ? { bottom: -10, left: element.width / 2 } 
+        : { bottom: -0, left: 0 };
+
       overlays.add(element.id, 'sust-badge', {
-        position: { bottom: -5, left: element.width / 2 },
+        position: overlayPosition,
         html: containerDOM
       });
     }
   }
-  
+
   eventBus.on('import.done', () => elementRegistry.getAll().forEach(updateOverlays));
   eventBus.on('elements.changed', (context) => context.elements.forEach(updateOverlays));
   eventBus.on('shape.removed', (context) => delete expandedStates[context.element.id]);

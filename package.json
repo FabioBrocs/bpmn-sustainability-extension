@@ -1,6 +1,6 @@
 {
   "name": "bpmn-sustainability-extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A BPMN 2.0 extension for modeling and tracking IoT sustainability data",
   "main": "dist/index.js",
   "scripts": {

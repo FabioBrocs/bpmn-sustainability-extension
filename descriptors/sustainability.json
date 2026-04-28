@@ -19,6 +19,8 @@
       "superClass": [ "Element" ],
       "properties": [
         { "name": "name", "isAttr": true, "type": "String" },
+        { "name": "type", "isAttr": true, "type": "String" },
+        { "name": "formulaId", "isAttr": true, "type": "String" },
         { "name": "formula", "isAttr": true, "type": "String" },
         { "name": "measurements", "type": "Measurement", "isMany": true }
       ]
@@ -28,8 +30,11 @@
       "superClass": [ "Element" ],
       "properties": [
         { "name": "name", "isAttr": true, "type": "String" },
-        { "name": "type", "isAttr": true, "type": "String" }, 
-        { "name": "formulaId", "isAttr": true, "type": "String" }, 
+        { "name": "type", "isAttr": true, "type": "String" },
+        { "name": "value", "isAttr": true, "type": "String" },
+        { "name": "unit", "isAttr": true, "type": "String" },
+        { "name": "dataSource", "isAttr": true, "type": "String" },
+        { "name": "variable", "isAttr": true, "type": "String" },
         { "name": "formula", "isAttr": true, "type": "String" },
         { "name": "measurements", "type": "Measurement", "isMany": true }
       ]

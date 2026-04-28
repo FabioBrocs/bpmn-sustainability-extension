@@ -1,8 +1,8 @@
 import { isTextFieldEntryEdited, isSelectEntryEdited, SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
 import { html } from 'htm/preact';
-import { CustomTextField, AggregationModeToggle, AggregationStrategySelector, ChildSensorInput, AddChildSensorButton } from '../components/SustainabilityInputs';
-import { validateSensorId } from '../utils/SustainabilityHelpers';
+import { CustomTextField } from '../components/SustainabilityInputs';
+import { buildMeasurementEntries } from './SharedMeasurementProps';
 
 export default function CalculatedIndicatorProps(element, indicator, indicatorConfig, measurements, idPrefix) {
   const entries = [];
@@ -46,18 +46,13 @@ export default function CalculatedIndicatorProps(element, indicator, indicatorCo
       component: () => html`<div style="margin-top: 15px; padding: 4px 8px; background: #f1f3f4; border-radius: 4px; border-left: 3px solid #28a745;"><span style="font-size: 11px; font-weight: bold; color: #202124;">VARIABLE: ${varLabel}</span></div>`
     });
 
-    entries.push({ id: `${varIdPrefix}-mode-toggle`, element, measurement, component: AggregationModeToggle });
-
-    if (measurement.get('type') === 'aggregation') {
-      entries.push({ id: `${varIdPrefix}-strategy`, element, measurement, component: AggregationStrategySelector });
-      (measurement.get('measurements') || []).forEach((childSensor, childIdx) => {
-        entries.push({ id: `${varIdPrefix}-child-${childIdx}`, element, parentMeasurement: measurement, childSensor, component: ChildSensorInput });
-      });
-      entries.push({ id: `${varIdPrefix}-add-child`, element, measurement, component: AddChildSensorButton });
-    } else {
-      entries.push({ id: `${varIdPrefix}-value`, element, node: measurement, propName: 'value', label: `Measurement Value for ${varId}`, component: CustomTextField, isEdited: isTextFieldEntryEdited });
-      entries.push({ id: `${varIdPrefix}-source`, element, node: measurement, propName: 'dataSource', label: `Sensor ID for ${varId}`, component: CustomTextField, validate: (value) => validateSensorId(measurement, value), isEdited: isTextFieldEntryEdited });
-    }
+    entries.push(...buildMeasurementEntries(
+      element, 
+      measurement, 
+      varIdPrefix, 
+      `Measurement Value for ${varId}`, 
+      `Sensor ID for ${varId}`
+    ));
   });
 
   return entries;

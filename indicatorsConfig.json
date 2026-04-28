@@ -56,8 +56,8 @@
       "formulas": [
         {
           "id": "cold_climate",
-          "label": "Thermal Sensation (Cold <=10°)",
-          "expression": "13.12 + 0.6215 * T -11.37 * (V^0.16) + 0.3965 * T * (V^0.16)",
+          "label": "Thermal Sensation (Cold <=10°C)",
+          "expression": "13.12 + 0.6215 * T - 11.37 * (V^0.16) + 0.3965 * T * (V^0.16)",
           "variables": [
             { "id": "T", "unit": "°C" },
             { "id": "V", "unit": "km/h" }
@@ -65,8 +65,8 @@
         },
         {
           "id": "hot_climate",
-          "label": "Thermal Sensation (Hot >=27°)",
-          "expression": "-8.784 + 1.611 * T + 2.34 * H - 0.146 * T * H",
+          "label": "Thermal Sensation (Hot >=27°C)",
+          "expression": "-8.784694 + 1.61139411 * T + 2.33854883 * H - 0.14611605 * T * H - 0.012308094 * (T^2) - 0.016424827 * (H^2) + 0.002211732 * (T^2) * H + 0.00072546 * T * (H^2) - 0.000003582 * (T^2) * (H^2)",
           "variables": [
             { "id": "T", "unit": "°C" },
             { "id": "H", "unit": "%" }

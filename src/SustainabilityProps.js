@@ -1,9 +1,12 @@
-import { html } from 'htm/preact';
+import { h } from '@bpmn-io/properties-panel/preact';
+import htm from 'htm';
 import { isSelectEntryEdited } from '@bpmn-io/properties-panel';
 import { getSustData, getConfig } from './utils/SustainabilityHelpers';
 import { AddIndicatorButton, RemoveIndicatorButton, IndicatorNameSelect } from './components/SustainabilityButtons';
 import CalculatedIndicatorProps from './logic/CalculatedIndicatorProps';
 import RawIndicatorProps from './logic/RawIndicatorProps';
+
+const html = htm.bind(h);
 
 /** Generates the property panel entries for managing sustainability indicators attached to a BPMN element. */
 export function getSustainabilityProps(element) {
