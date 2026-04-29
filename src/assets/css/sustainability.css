@@ -1,0 +1,146 @@
+.sust-overlay-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  pointer-events: auto;
+}
+
+.sust-overlay-container.collapsed {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: default;
+}
+
+.sust-overlay-container.expanded {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: default;
+  position: absolute;
+  z-index: 100;
+  transform: translate(calc(-50% + 0px), 0px);
+}
+
+.sust-summary-badge {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.sust-summary-badge:hover {
+  transform: scale(1.1);
+}
+
+.sust-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  fill: #28a745;
+  overflow: hidden;
+  user-select: none;
+}
+
+.sust-badge-plus {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #28a745;
+  color: white;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.sust-details-card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border: 1px solid #e0e0e0;
+  min-width: 200px;
+  min-height: 100px;
+  overflow: hidden;
+  resize: both;
+  display: flex;
+  flex-direction: column;
+}
+
+.sust-card-header {
+  background: #28a745;
+  color: white;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sust-card-header:active {
+  cursor: grabbing;
+}
+
+.sust-close-btn {
+  cursor: pointer;
+  opacity: 0.8;
+  font-size: 18px;
+  line-height: 0.6;
+  padding: 0 4px;
+  transition: opacity 0.2s;
+}
+
+.sust-close-btn:hover {
+  opacity: 1;
+}
+
+.sust-card-body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.sust-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 4px;
+}
+
+.sust-row-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #555;
+}
+
+.sust-row-label-text {
+  font-weight: 500;
+}
+
+.sust-row-value {
+  font-weight: bold;
+  text-align: right;
+}
+
+.sust-agg-note {
+  font-size: 9px;
+  color: #888;
+}

@@ -1,27 +1,33 @@
-/** Preact UI components for inputs and toggles inside the properties panel. */
+/**
+ * Preact UI components for inputs and toggles inside the properties panel.
+ */
 import { html } from 'htm/preact';
 import { TextFieldEntry, SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getConfig, validateSensorId } from '../utils/SustainabilityHelpers';
+import { getConfig, validateSensorId, updateModdleProp } from '../utils/SustainabilityHelpers';
 
-/** Renders a standard text field bound to a specific Moddle property. */
+/**
+ * Renders a standard text field bound to a specific Moddle property.
+ */
 export function CustomTextField(props) {
-  const { element, id, node, propName, label, validate } = props;
+  const { element, id, node, propName, label, validate, description } = props;
   const modeling = useService('modeling');
   const translate = useService('translate');
   const debounce = useService('debounceInput');
 
   const getValue = () => node.get(propName) || '';
-  const setValue = value => modeling.updateModdleProperties(element, node, { [propName]: value });
+  const setValue = value => updateModdleProp(modeling, element, node, { [propName]: value });
 
   return html`<${TextFieldEntry} 
     id=${id} element=${element} label=${translate(label)} 
     getValue=${getValue} setValue=${setValue} 
-    debounce=${debounce} validate=${validate} 
+    debounce=${debounce} validate=${validate} description=${description}
   />`;
 }
 
-/** Renders a dropdown to select the measurement unit based on the indicator config. */
+/**
+ * Renders a dropdown to select the measurement unit based on the indicator config.
+ */
 export function MeasurementUnitSelect(props) {
   const { element, id, indicator, measurement } = props;
   const modeling = useService('modeling');
@@ -36,7 +42,7 @@ export function MeasurementUnitSelect(props) {
     return measurement.get('unit') || defaultUnit;
   };
   
-  const setValue = value => modeling.updateModdleProperties(element, measurement, { unit: value });
+  const setValue = value => updateModdleProp(modeling, element, measurement, { unit: value });
   const getOptions = () => currentConfig?.allowedUnits || [];
 
   return html`<${SelectEntry} 
@@ -45,7 +51,9 @@ export function MeasurementUnitSelect(props) {
   />`;
 }
 
-/** Renders a UI toggle switch to enable or disable 1-to-N sensor aggregation. */
+/**
+ * Renders a UI toggle switch to enable or disable 1-to-N sensor aggregation.
+ */
 export function AggregationModeToggle(props) {
   const { element, id, measurement } = props;
   const modeling = useService('modeling');
@@ -55,14 +63,13 @@ export function AggregationModeToggle(props) {
 
   const toggleMode = () => {
     if (isAggregation) {
-      modeling.updateModdleProperties(element, measurement, {
-        type: '', formula: '', measurements: []
-      });
+      updateModdleProp(modeling, element, measurement, { type: '', formula: '', measurements: [] });
     } else {
       const childSensor = bpmnFactory.create('sust:Measurement', { value: '' });
       childSensor.$parent = measurement;
-      modeling.updateModdleProperties(element, measurement, {
-        type: 'aggregation', formula: 'AVG', value: '', measurements: [childSensor]
+      // FIX: Esplicitamente azzeriamo dataSource e value sul parent quando diventa aggregazione
+      updateModdleProp(modeling, element, measurement, {
+        type: 'aggregation', formula: 'AVG', value: '', dataSource: '', measurements: [childSensor]
       });
     }
   };
@@ -79,32 +86,64 @@ export function AggregationModeToggle(props) {
   `;
 }
 
-/** Renders a selector for choosing the aggregation strategy (AVG, SUM, MIN, MAX). */
+/**
+ * Renders a selector for choosing the aggregation strategy (AVG, SUM, MIN, MAX, CUSTOM).
+ */
 export function AggregationStrategySelector(props) {
   const { element, id, measurement } = props;
   const modeling = useService('modeling');
 
-  const strategies = ['AVG', 'SUM', 'MIN', 'MAX'];
-  const currentStrategy = measurement.get('formula') || 'AVG';
+  const standardStrategies = ['AVG', 'SUM', 'MIN', 'MAX'];
+  const currentFormula = measurement.get('formula') || 'AVG';
+  
+  const isCustom = !standardStrategies.includes(currentFormula) && currentFormula !== '';
+  const activeTab = isCustom ? 'CUSTOM' : currentFormula;
 
-  const setStrategy = (strat) => modeling.updateModdleProperties(element, measurement, { formula: strat });
+  const setStrategy = (strat) => {
+    if (strat === 'CUSTOM') {
+      updateModdleProp(modeling, element, measurement, { formula: ' ' }); 
+    } else {
+      updateModdleProp(modeling, element, measurement, { formula: strat });
+    }
+  };
+
+  const validateCustomFormula = (value) => {
+    if (!value || value.trim() === '') return 'Custom formula cannot be empty.';
+    return null;
+  };
 
   return html`
     <div class="bio-properties-panel-entry" data-entry-id=${id}>
       <label class="bio-properties-panel-label">Aggregation Strategy</label>
       <div style="display: flex; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 5px;">
-        ${strategies.map(strat => html`
+        ${[...standardStrategies, 'CUSTOM'].map(strat => html`
           <div onClick=${() => setStrategy(strat)}
-            style="flex: 1; text-align: center; padding: 6px 0; font-size: 12px; cursor: pointer; font-weight: ${currentStrategy === strat ? 'bold' : 'normal'}; background: ${currentStrategy === strat ? '#28a745' : 'transparent'}; color: ${currentStrategy === strat ? 'white' : '#555'}; border-right: 1px solid #ddd; transition: all 0.2s ease;">
+            style="flex: 1; text-align: center; padding: 6px 0; font-size: 11px; cursor: pointer; font-weight: ${activeTab === strat ? 'bold' : 'normal'}; background: ${activeTab === strat ? '#28a745' : 'transparent'}; color: ${activeTab === strat ? 'white' : '#555'}; border-right: 1px solid #ddd; transition: all 0.2s ease;">
             ${strat}
           </div>
         `)}
       </div>
+      
+      ${activeTab === 'CUSTOM' ? html`
+        <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 6px; border-left: 3px solid #28a745;">
+          <${CustomTextField} 
+            id="${id}-custom-formula" 
+            element=${element} 
+            node=${measurement} 
+            propName="formula" 
+            label="Custom Math Formula" 
+            description="Use child Sensor IDs as variables (e.g., SensorA + SensorB / 2). Spaces in IDs are not allowed."
+            validate=${validateCustomFormula} 
+          />
+        </div>
+      ` : ''}
     </div>
   `;
 }
 
-/** Renders a row containing value and ID inputs for a single child sensor. */
+/**
+ * Renders a row containing value and ID inputs for a single child sensor.
+ */
 export function ChildSensorInput(props) {
   const { element, id, parentMeasurement, childSensor } = props;
   const modeling = useService('modeling');
@@ -114,13 +153,13 @@ export function ChildSensorInput(props) {
   const errorMessage = validateSensorId(childSensor, rawSource);
   const hasError = errorMessage !== null;
 
-  const onValueInput = (e) => modeling.updateModdleProperties(element, childSensor, { value: e.target.value });
-  const onSourceInput = (e) => modeling.updateModdleProperties(element, childSensor, { dataSource: e.target.value });
+  const onValueInput = (e) => updateModdleProp(modeling, element, childSensor, { value: e.target.value });
+  const onSourceInput = (e) => updateModdleProp(modeling, element, childSensor, { dataSource: e.target.value });
   
   const onRemove = () => {
     const currentChildren = parentMeasurement.get('measurements') || [];
     const newChildren = currentChildren.filter(c => c !== childSensor);
-    modeling.updateModdleProperties(element, parentMeasurement, { measurements: newChildren });
+    updateModdleProp(modeling, element, parentMeasurement, { measurements: newChildren });
   };
 
   return html`
@@ -139,7 +178,9 @@ export function ChildSensorInput(props) {
   `;
 }
 
-/** Renders a button that appends a new child sensor Moddle instance to an aggregation. */
+/**
+ * Renders a button that appends a new child sensor Moddle instance to an aggregation.
+ */
 export function AddChildSensorButton(props) {
   const { element, measurement } = props;
   const modeling = useService('modeling');
@@ -148,7 +189,7 @@ export function AddChildSensorButton(props) {
   const onAdd = () => {
     const newSensor = bpmnFactory.create('sust:Measurement', { value: '' });
     newSensor.$parent = measurement;
-    modeling.updateModdleProperties(element, measurement, {
+    updateModdleProp(modeling, element, measurement, {
       measurements: [...(measurement.get('measurements') || []), newSensor]
     });
   };

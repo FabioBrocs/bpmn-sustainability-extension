@@ -1,8 +1,14 @@
+/**
+ * Preact UI components for adding, removing, and selecting indicators.
+ */
 import { html } from 'htm/preact';
 import { SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getConfig, createIndicatorNode, removeIndicatorNode } from '../utils/SustainabilityHelpers';
+import { getConfig, createIndicatorNode, removeIndicatorNode, updateModdleProp } from '../utils/SustainabilityHelpers';
 
+/**
+ * Renders the button to add a new sustainability indicator.
+ */
 export function AddIndicatorButton(props) {
   const { element } = props;
   const modeling = useService('modeling');
@@ -17,6 +23,9 @@ export function AddIndicatorButton(props) {
   `;
 }
 
+/**
+ * Renders the button to remove an existing sustainability indicator.
+ */
 export function RemoveIndicatorButton(props) {
   const { element, indicator } = props;
   const modeling = useService('modeling');
@@ -30,6 +39,9 @@ export function RemoveIndicatorButton(props) {
   `;
 }
 
+/**
+ * Renders the dropdown to select the type/name of the indicator.
+ */
 export function IndicatorNameSelect(props) {
   const { element, id, indicator } = props;
   const modeling = useService('modeling');
@@ -41,7 +53,7 @@ export function IndicatorNameSelect(props) {
   
   const setValue = value => {
     if (!value) {
-      return modeling.updateModdleProperties(element, indicator, { name: '', type: '', formulaId: '', formula: '', measurements: [] });
+      return updateModdleProp(modeling, element, indicator, { name: '', type: '', formulaId: '', formula: '', measurements: [] });
     }
 
     const selectedConfig = config.indicators.find(ind => ind.id === value);
@@ -53,7 +65,7 @@ export function IndicatorNameSelect(props) {
       newMeasurements[0].$parent = indicator;
     }
 
-    modeling.updateModdleProperties(element, indicator, { 
+    updateModdleProp(modeling, element, indicator, { 
       name: value, type: selectedConfig?.type || 'raw', formulaId: '', formula: '', measurements: newMeasurements
     });
   };

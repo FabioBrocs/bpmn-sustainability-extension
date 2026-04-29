@@ -1,9 +1,16 @@
+/**
+ * Logic for constructing the properties panel entries for calculated indicators.
+ */
 import { isTextFieldEntryEdited, isSelectEntryEdited, SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
 import { html } from 'htm/preact';
 import { CustomTextField } from '../components/SustainabilityInputs';
 import { buildMeasurementEntries } from './SharedMeasurementProps';
+import { updateModdleProp } from '../utils/SustainabilityHelpers';
 
+/**
+ * Generates the necessary properties panel entries for a calculated indicator.
+ */
 export default function CalculatedIndicatorProps(element, indicator, indicatorConfig, measurements, idPrefix) {
   const entries = [];
   const formulasList = indicatorConfig.formulas || [];
@@ -58,6 +65,9 @@ export default function CalculatedIndicatorProps(element, indicator, indicatorCo
   return entries;
 }
 
+/**
+ * Component to select the baseline formula for a calculated indicator.
+ */
 function FormulaSelect(props) {
   const { element, id, indicator, formulasList } = props;
   const modeling = useService('modeling');
@@ -67,7 +77,7 @@ function FormulaSelect(props) {
   const getValue = () => indicator.get('formulaId') || '';
   
   const setValue = value => {
-    if (!value) return modeling.updateModdleProperties(element, indicator, { formulaId: '', formula: '', measurements: [] });
+    if (!value) return updateModdleProp(modeling, element, indicator, { formulaId: '', formula: '', measurements: [] });
 
     const selectedFormula = formulasList.find(f => f.id === value);
     const newMeasurements = (selectedFormula?.variables || []).map(v => {
@@ -76,7 +86,7 @@ function FormulaSelect(props) {
       return m;
     });
 
-    modeling.updateModdleProperties(element, indicator, { 
+    updateModdleProp(modeling, element, indicator, { 
       formulaId: value, formula: selectedFormula?.expression || '', measurements: newMeasurements
     });
   };
