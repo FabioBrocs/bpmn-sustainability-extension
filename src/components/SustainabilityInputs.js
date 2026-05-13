@@ -4,11 +4,8 @@
 import { html } from 'htm/preact';
 import { TextFieldEntry, SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getConfig, validateSensorId, updateModdleProp } from '../utils/SustainabilityHelpers';
+import { getConfig, validateSensorId, updateModdleProp, getAllSensorIds, syncSensorIdRename, syncCalculatedValues } from '../utils/SustainabilityHelpers';
 
-/**
- * Renders a standard text field bound to a specific Moddle property.
- */
 export function CustomTextField(props) {
   const { element, id, node, propName, label, validate, description } = props;
   const modeling = useService('modeling');
@@ -16,7 +13,15 @@ export function CustomTextField(props) {
   const debounce = useService('debounceInput');
 
   const getValue = () => node.get(propName) || '';
-  const setValue = value => updateModdleProp(modeling, element, node, { [propName]: value });
+  const setValue = value => {
+    const oldValue = node.get(propName);
+    updateModdleProp(modeling, element, node, { [propName]: value });
+    
+    if (propName === 'dataSource' && oldValue !== value) {
+      syncSensorIdRename(modeling, element, oldValue, value);
+    }
+    syncCalculatedValues(modeling, element);
+  };
 
   return html`<${TextFieldEntry} 
     id=${id} element=${element} label=${translate(label)} 
@@ -25,9 +30,42 @@ export function CustomTextField(props) {
   />`;
 }
 
-/**
- * Renders a dropdown to select the measurement unit based on the indicator config.
- */
+export function CalculatedVariableInput(props) {
+  const { element, id, node, label } = props;
+  const modeling = useService('modeling');
+  const translate = useService('translate');
+
+  const valValue = () => node.get('value') || '';
+  const onValInput = (e) => {
+    updateModdleProp(modeling, element, node, { value: e.target.value });
+  };
+
+  const srcValue = () => node.get('dataSource') || '';
+  const onSrcInput = (e) => {
+    updateModdleProp(modeling, element, node, { dataSource: e.target.value });
+    syncCalculatedValues(modeling, element);
+  };
+
+  const availableIds = getAllSensorIds(element);
+  const datalistId = `${id}-datalist`;
+
+  return html`
+    <div class="bio-properties-panel-entry" data-entry-id=${id} style="margin-bottom: 10px;">
+      <label class="bio-properties-panel-label">${translate(label)}</label>
+      <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+        <div style="background: #e9ecef; padding: 4px 6px; border-radius: 4px; font-size: 10px; color: #555; font-weight: bold;">VAL</div>
+        <input type="text" value=${valValue()} onInput=${onValInput} placeholder="Test Val..." style="flex: 1; min-width: 40px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;" />
+
+        <div style="background: #e9ecef; padding: 4px 6px; border-radius: 4px; font-size: 10px; color: #555; font-weight: bold;">ID</div>
+        <input type="text" value=${srcValue()} onInput=${onSrcInput} list=${datalistId} placeholder="Link ID..." spellcheck="false" style="flex: 2; min-width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; outline: none;" />
+        <datalist id=${datalistId}>
+          ${availableIds.map(val => html`<option value=${val}></option>`)}
+        </datalist>
+      </div>
+    </div>
+  `;
+}
+
 export function MeasurementUnitSelect(props) {
   const { element, id, indicator, measurement } = props;
   const modeling = useService('modeling');
@@ -37,11 +75,7 @@ export function MeasurementUnitSelect(props) {
   const currentIndicatorId = indicator.get('name') || '';
   const currentConfig = config.indicators.find(ind => ind.id === currentIndicatorId);
 
-  const getValue = () => {
-    const defaultUnit = currentConfig?.allowedUnits?.[0]?.value || '';
-    return measurement.get('unit') || defaultUnit;
-  };
-  
+  const getValue = () => measurement.get('unit') || currentConfig?.allowedUnits?.[0]?.value || '';
   const setValue = value => updateModdleProp(modeling, element, measurement, { unit: value });
   const getOptions = () => currentConfig?.allowedUnits || [];
 
@@ -51,9 +85,6 @@ export function MeasurementUnitSelect(props) {
   />`;
 }
 
-/**
- * Renders a UI toggle switch to enable or disable 1-to-N sensor aggregation.
- */
 export function AggregationModeToggle(props) {
   const { element, id, measurement } = props;
   const modeling = useService('modeling');
@@ -67,11 +98,11 @@ export function AggregationModeToggle(props) {
     } else {
       const childSensor = bpmnFactory.create('sust:Measurement', { value: '' });
       childSensor.$parent = measurement;
-      // FIX: Esplicitamente azzeriamo dataSource e value sul parent quando diventa aggregazione
       updateModdleProp(modeling, element, measurement, {
         type: 'aggregation', formula: 'AVG', value: '', dataSource: '', measurements: [childSensor]
       });
     }
+    syncCalculatedValues(modeling, element);
   };
 
   return html`
@@ -86,9 +117,6 @@ export function AggregationModeToggle(props) {
   `;
 }
 
-/**
- * Renders a selector for choosing the aggregation strategy (AVG, SUM, MIN, MAX, CUSTOM).
- */
 export function AggregationStrategySelector(props) {
   const { element, id, measurement } = props;
   const modeling = useService('modeling');
@@ -100,11 +128,9 @@ export function AggregationStrategySelector(props) {
   const activeTab = isCustom ? 'CUSTOM' : currentFormula;
 
   const setStrategy = (strat) => {
-    if (strat === 'CUSTOM') {
-      updateModdleProp(modeling, element, measurement, { formula: ' ' }); 
-    } else {
-      updateModdleProp(modeling, element, measurement, { formula: strat });
-    }
+    // FIXED: Inserted clear example string
+    updateModdleProp(modeling, element, measurement, { formula: strat === 'CUSTOM' ? 'sens_01 + sens_02' : strat });
+    syncCalculatedValues(modeling, element);
   };
 
   const validateCustomFormula = (value) => {
@@ -128,11 +154,9 @@ export function AggregationStrategySelector(props) {
         <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 6px; border-left: 3px solid #28a745;">
           <${CustomTextField} 
             id="${id}-custom-formula" 
-            element=${element} 
-            node=${measurement} 
-            propName="formula" 
+            element=${element} node=${measurement} propName="formula" 
             label="Custom Math Formula" 
-            description="Use child Sensor IDs as variables (e.g., SensorA + SensorB / 2). Spaces in IDs are not allowed."
+            description="Use child Sensor IDs as variables. Spaces are not allowed."
             validate=${validateCustomFormula} 
           />
         </div>
@@ -141,25 +165,32 @@ export function AggregationStrategySelector(props) {
   `;
 }
 
-/**
- * Renders a row containing value and ID inputs for a single child sensor.
- */
 export function ChildSensorInput(props) {
   const { element, id, parentMeasurement, childSensor } = props;
   const modeling = useService('modeling');
 
   const getValue = () => childSensor.get('value') || '';
   const rawSource = childSensor.get('dataSource') || '';
-  const errorMessage = validateSensorId(childSensor, rawSource);
+  
+  const errorMessage = validateSensorId(element, childSensor, rawSource);
   const hasError = errorMessage !== null;
 
-  const onValueInput = (e) => updateModdleProp(modeling, element, childSensor, { value: e.target.value });
-  const onSourceInput = (e) => updateModdleProp(modeling, element, childSensor, { dataSource: e.target.value });
+  const onValueInput = (e) => {
+    updateModdleProp(modeling, element, childSensor, { value: e.target.value });
+    syncCalculatedValues(modeling, element);
+  };
+
+  const onSourceInput = (e) => {
+    const oldSource = childSensor.get('dataSource');
+    updateModdleProp(modeling, element, childSensor, { dataSource: e.target.value });
+    syncSensorIdRename(modeling, element, oldSource, e.target.value);
+    syncCalculatedValues(modeling, element);
+  };
   
   const onRemove = () => {
-    const currentChildren = parentMeasurement.get('measurements') || [];
-    const newChildren = currentChildren.filter(c => c !== childSensor);
+    const newChildren = (parentMeasurement.get('measurements') || []).filter(c => c !== childSensor);
     updateModdleProp(modeling, element, parentMeasurement, { measurements: newChildren });
+    syncCalculatedValues(modeling, element);
   };
 
   return html`
@@ -178,9 +209,6 @@ export function ChildSensorInput(props) {
   `;
 }
 
-/**
- * Renders a button that appends a new child sensor Moddle instance to an aggregation.
- */
 export function AddChildSensorButton(props) {
   const { element, measurement } = props;
   const modeling = useService('modeling');
@@ -192,6 +220,7 @@ export function AddChildSensorButton(props) {
     updateModdleProp(modeling, element, measurement, {
       measurements: [...(measurement.get('measurements') || []), newSensor]
     });
+    syncCalculatedValues(modeling, element);
   };
 
   return html`

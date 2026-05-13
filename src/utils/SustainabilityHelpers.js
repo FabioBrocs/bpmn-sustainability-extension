@@ -5,23 +5,19 @@ import configJson from '../../indicatorsConfig.json';
 
 const formulaCache = new Map();
 
-/** Retrieves the global configuration for sustainability indicators. */
 export function getConfig() {
   return configJson;
 }
 
-/** Retrieves the SustainabilityData extension element from a given business object. */
 export function getSustData(businessObject) {
   const extElements = businessObject.get('extensionElements');
   return extElements?.get('values')?.find(el => el.$type === 'sust:SustainabilityData') || null;
 }
 
-/** Safely updates Moddle properties using the command stack for proper Undo/Redo support. */
 export function updateModdleProp(modeling, element, node, properties) {
   modeling.updateModdleProperties(element, node, properties);
 }
 
-/** Creates and attaches a new indicator node, ensuring full command stack compliance. */
 export function createIndicatorNode(element, bpmnFactory, modeling) {
   const bo = element.businessObject;
   let extElements = bo.get('extensionElements');
@@ -42,11 +38,11 @@ export function createIndicatorNode(element, bpmnFactory, modeling) {
     name: '', type: '', formulaId: '', formula: '', measurements: []
   });
 
-  const newIndicators = [...(sustData.get('indicators') || []), newIndicator];
+  // FIXED: Prepend new indicator so it appears at the TOP of the properties panel
+  const newIndicators = [newIndicator, ...(sustData.get('indicators') || [])];
   modeling.updateModdleProperties(element, sustData, { indicators: newIndicators });
 }
 
-/** Removes a specific indicator node from the element, preserving undo history. */
 export function removeIndicatorNode(element, indicator, modeling) {
   const sustData = getSustData(element.businessObject);
   if (!sustData) return;
@@ -54,12 +50,110 @@ export function removeIndicatorNode(element, indicator, modeling) {
   modeling.updateModdleProperties(element, sustData, { indicators: updatedIndicators });
 }
 
-/** Validates that a sensor ID does not contain spaces. */
-export function validateSensorId(measurement, value) {
-  return (value && /\s/.test(value)) ? 'Sensor ID cannot contain spaces.' : null;
+export function getAllSensorIds(element) {
+  const sustData = getSustData(element?.businessObject);
+  if (!sustData) return [];
+  const ids = new Set();
+  
+  (sustData.get('indicators') || []).forEach(ind => {
+    if (ind.get('type') !== 'calculated') {
+      (ind.get('measurements') || []).forEach(m => {
+        if (m.get('type') === 'aggregation') {
+          if (m.get('dataSource') && m.get('dataSource').trim() !== '') ids.add(m.get('dataSource'));
+          (m.get('measurements') || []).forEach(child => {
+            if (child.get('dataSource') && child.get('dataSource').trim() !== '') ids.add(child.get('dataSource'));
+          });
+        } else {
+          if (m.get('dataSource') && m.get('dataSource').trim() !== '') ids.add(m.get('dataSource'));
+        }
+      });
+    }
+  });
+  return Array.from(ids);
 }
 
-/** Checks if a measurement or its children are missing a sensor ID. */
+export function syncSensorIdRename(modeling, element, oldId, newId) {
+  if (!oldId || !newId || oldId === newId) return;
+  const sustData = getSustData(element?.businessObject);
+  if (!sustData) return;
+
+  (sustData.get('indicators') || []).forEach(ind => {
+    if (ind.get('type') === 'calculated') {
+      (ind.get('measurements') || []).forEach(m => {
+        if (m.get('dataSource') === oldId) {
+          modeling.updateModdleProperties(element, m, { dataSource: newId });
+        }
+      });
+    }
+  });
+}
+
+export function syncCalculatedValues(modeling, element) {
+  const sustData = getSustData(element?.businessObject);
+  if (!sustData) return;
+
+  const valueMap = {};
+  (sustData.get('indicators') || []).forEach(ind => {
+    if (ind.get('type') !== 'calculated') {
+      (ind.get('measurements') || []).forEach(m => {
+        if (m.get('type') === 'aggregation') {
+          const aggId = m.get('dataSource');
+          if (aggId && aggId.trim() !== '') valueMap[aggId] = extractMeasurementValue(m);
+          
+          (m.get('measurements') || []).forEach(child => {
+            const childId = child.get('dataSource');
+            if (childId && childId.trim() !== '') valueMap[childId] = extractMeasurementValue(child);
+          });
+        } else {
+          const mId = m.get('dataSource');
+          if (mId && mId.trim() !== '') valueMap[mId] = extractMeasurementValue(m);
+        }
+      });
+    }
+  });
+
+  (sustData.get('indicators') || []).forEach(ind => {
+    if (ind.get('type') === 'calculated') {
+      (ind.get('measurements') || []).forEach(m => {
+        const mId = m.get('dataSource');
+        if (mId && valueMap.hasOwnProperty(mId)) {
+          const newValue = String(valueMap[mId]);
+          if (m.get('value') !== newValue) {
+            modeling.updateModdleProperties(element, m, { value: newValue });
+          }
+        }
+      });
+    }
+  });
+}
+
+export function validateSensorId(element, measurement, value) {
+  if (!value || value.trim() === '') return null;
+  if (/\s/.test(value)) return 'Sensor ID cannot contain spaces.';
+
+  const sustData = getSustData(element?.businessObject);
+  if (!sustData) return null;
+
+  let duplicateFound = false;
+  (sustData.get('indicators') || []).forEach(ind => {
+    if (ind.get('type') !== 'calculated') {
+      (ind.get('measurements') || []).forEach(m => {
+        if (m.get('type') === 'aggregation') {
+          if (m.get('dataSource') === value && m !== measurement) duplicateFound = true;
+          (m.get('measurements') || []).forEach(child => {
+            if (child.get('dataSource') === value && child !== measurement) duplicateFound = true;
+          });
+        } else {
+          if (m.get('dataSource') === value && m !== measurement) duplicateFound = true;
+        }
+      });
+    }
+  });
+
+  if (duplicateFound) return 'ID already exists!';
+  return null;
+}
+
 export function hasMissingSensorId(measurement) {
   if (!measurement) return true;
   if (measurement.get('type') === 'aggregation') {
@@ -69,7 +163,6 @@ export function hasMissingSensorId(measurement) {
   return !measurement.get('dataSource')?.trim();
 }
 
-/** Extracts and computes a numeric value from a measurement node. */
 export function extractMeasurementValue(measurement) {
   if (!measurement) return 0;
   if (measurement.get('type') === 'aggregation') {
@@ -91,7 +184,6 @@ export function extractMeasurementValue(measurement) {
   return parseFloat(measurement.get('value') || 0);
 }
 
-/** Safely evaluates a mathematical formula string using a sanitized environment and caching. */
 export function evaluateFormula(formula, varsMap) {
   if (!formula || !formula.trim()) return 'Calc Err';
   if (!/^[a-zA-Z0-9_.\s+\-*/()^]+$/.test(formula)) return 'Syntax Err';

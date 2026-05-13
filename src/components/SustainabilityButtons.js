@@ -1,10 +1,10 @@
 /**
- * Preact UI components for adding, removing, and selecting indicators.
+ * Preact UI components for adding and selecting indicators.
  */
 import { html } from 'htm/preact';
 import { SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getConfig, createIndicatorNode, removeIndicatorNode, updateModdleProp } from '../utils/SustainabilityHelpers';
+import { getConfig, createIndicatorNode, updateModdleProp } from '../utils/SustainabilityHelpers';
 
 /**
  * Renders the button to add a new sustainability indicator.
@@ -16,24 +16,8 @@ export function AddIndicatorButton(props) {
 
   return html`
     <div style="padding: 10px 0;">
-      <button onClick=${() => createIndicatorNode(element, bpmnFactory, modeling)} style="width: 100%; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      <button onClick=${() => createIndicatorNode(element, bpmnFactory, modeling)} style="width: 100%; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(40,167,69,0.2);">
         + Add Indicator
-      </button>
-    </div>
-  `;
-}
-
-/**
- * Renders the button to remove an existing sustainability indicator.
- */
-export function RemoveIndicatorButton(props) {
-  const { element, indicator } = props;
-  const modeling = useService('modeling');
-
-  return html`
-    <div style="text-align: right; margin-top: 5px; padding-bottom: 5px;">
-      <button onClick=${() => removeIndicatorNode(element, indicator, modeling)} style="background: none; border: none; color: #dc3545; font-size: 12px; cursor: pointer; text-decoration: underline;">
-        Remove Indicator
       </button>
     </div>
   `;

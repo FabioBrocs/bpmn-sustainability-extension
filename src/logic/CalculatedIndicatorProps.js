@@ -1,16 +1,9 @@
-/**
- * Logic for constructing the properties panel entries for calculated indicators.
- */
 import { isTextFieldEntryEdited, isSelectEntryEdited, SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
 import { html } from 'htm/preact';
-import { CustomTextField } from '../components/SustainabilityInputs';
-import { buildMeasurementEntries } from './SharedMeasurementProps';
-import { updateModdleProp } from '../utils/SustainabilityHelpers';
+import { CustomTextField, CalculatedVariableInput } from '../components/SustainabilityInputs';
+import { updateModdleProp, extractMeasurementValue, evaluateFormula } from '../utils/SustainabilityHelpers';
 
-/**
- * Generates the necessary properties panel entries for a calculated indicator.
- */
 export default function CalculatedIndicatorProps(element, indicator, indicatorConfig, measurements, idPrefix) {
   const entries = [];
   const formulasList = indicatorConfig.formulas || [];
@@ -40,6 +33,27 @@ export default function CalculatedIndicatorProps(element, indicator, indicatorCo
     id: `${idPrefix}-formula-text`, element, node: indicator, propName: 'formula', label: 'Edit Formula Calculation', component: CustomTextField, validate: validateFormula, isEdited: isTextFieldEntryEdited
   });
 
+  entries.push({
+    id: `${idPrefix}-calc-val-display`,
+    component: () => {
+      const currentFormula = indicator.get('formula') || selectedFormulaConfig.expression || '';
+      const varsMap = {};
+      (selectedFormulaConfig.variables || []).forEach((varObj, i) => {
+        varsMap[varObj.id || varObj] = extractMeasurementValue(measurements[i]);
+      });
+      const computedVal = evaluateFormula(currentFormula, varsMap);
+      
+      return html`
+        <div class="bio-properties-panel-entry">
+          <label class="bio-properties-panel-label" style="color: #28a745;">Computed Formula Result</label>
+          <div style="padding: 6px 10px; background: #f1f8f5; border: 1px dashed #28a745; border-radius: 4px; font-size: 13px; font-weight: bold; color: #155724; margin-top: 4px; margin-bottom: 12px;">
+            ${computedVal}
+          </div>
+        </div>
+      `;
+    }
+  });
+
   (selectedFormulaConfig.variables || []).forEach((varObj, varIndex) => {
     const measurement = measurements[varIndex];
     if (!measurement) return;
@@ -48,26 +62,19 @@ export default function CalculatedIndicatorProps(element, indicator, indicatorCo
     const varLabel = varObj.unit ? `${varId} (${varObj.unit})` : varId;
     const varIdPrefix = `${idPrefix}-var-${varId}`;
 
+    // Le variabili ora sono compatte, con il nome passato direttamente come "label" 
     entries.push({
-      id: `${varIdPrefix}-header`,
-      component: () => html`<div style="margin-top: 15px; padding: 4px 8px; background: #f1f3f4; border-radius: 4px; border-left: 3px solid #28a745;"><span style="font-size: 11px; font-weight: bold; color: #202124;">VARIABLE: ${varLabel}</span></div>`
+      id: `${varIdPrefix}-source`,
+      element,
+      node: measurement,
+      label: `Variable: ${varLabel}`,
+      component: CalculatedVariableInput
     });
-
-    entries.push(...buildMeasurementEntries(
-      element, 
-      measurement, 
-      varIdPrefix, 
-      `Measurement Value for ${varId}`, 
-      `Sensor ID for ${varId}`
-    ));
   });
 
   return entries;
 }
 
-/**
- * Component to select the baseline formula for a calculated indicator.
- */
 function FormulaSelect(props) {
   const { element, id, indicator, formulasList } = props;
   const modeling = useService('modeling');

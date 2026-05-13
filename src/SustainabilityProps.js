@@ -1,14 +1,49 @@
 import { h } from '@bpmn-io/properties-panel/preact';
 import htm from 'htm';
 import { isSelectEntryEdited } from '@bpmn-io/properties-panel';
-import { getSustData, getConfig } from './utils/SustainabilityHelpers';
-import { AddIndicatorButton, RemoveIndicatorButton, IndicatorNameSelect } from './components/SustainabilityButtons';
+import { useService } from 'bpmn-js-properties-panel';
+import { getSustData, getConfig, removeIndicatorNode } from './utils/SustainabilityHelpers';
+import { AddIndicatorButton, IndicatorNameSelect } from './components/SustainabilityButtons';
 import CalculatedIndicatorProps from './logic/CalculatedIndicatorProps';
 import RawIndicatorProps from './logic/RawIndicatorProps';
 
 const html = htm.bind(h);
 
-/** Generates the property panel entries for managing sustainability indicators attached to a BPMN element. */
+/** 
+ * L'Header: Stile solido con sfondo grigio e barra verde a sinistra.
+ */
+function IndicatorSectionHeader(props) {
+  const { element, indicator, index, total, indicatorConfig } = props;
+  const modeling = useService('modeling');
+  
+  const indicatorNum = total - index;
+  
+  const icon = indicatorConfig ? indicatorConfig.icon : '📌';
+  const label = indicatorConfig ? indicatorConfig.label : 'Indicator';
+
+  return html`
+    <div style="margin-top: 30px; margin-bottom: 10px; padding: 8px 10px; background: #f1f3f4; border-radius: 4px; border-left: 4px solid #28a745; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+      <span style="font-size: 13px; font-weight: bold; color: #202124; display: flex; align-items: center; gap: 6px;">
+        <span>${icon}</span> ${label} (#${indicatorNum})
+      </span>
+      <button onClick=${() => removeIndicatorNode(element, indicator, modeling)} 
+              title="Delete this indicator"
+              style="background: transparent; border: 1px solid #dc3545; color: #dc3545; font-size: 11px; font-weight: bold; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s;">
+        ✕ Remove
+      </button>
+    </div>
+  `;
+}
+
+/** 
+ * Il Footer: Tratteggio scuro e visibile per chiudere la sezione
+ */
+function IndicatorSectionFooter() {
+  return html`
+    <div style="width: 100%; height: 10px; border-bottom: 2px dashed #1e7e34; margin-bottom: 20px;"></div>
+  `;
+}
+
 export function getSustainabilityProps(element) {
   const sustData = getSustData(element.businessObject);
   const indicators = sustData?.get('indicators') || [];
@@ -28,7 +63,11 @@ export function getSustainabilityProps(element) {
     const idPrefix = `sust-ind-${index}`;
     const indicatorConfig = config.indicators.find(i => i.id === indicator.get('name'));
     
-    if (index > 0) entries.push({ id: `${idPrefix}-divider`, component: () => html`<hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;" />` });
+    entries.push({ 
+      id: `${idPrefix}-section-header`, 
+      element, indicator, index, total: indicators.length, indicatorConfig,
+      component: IndicatorSectionHeader 
+    });
 
     entries.push({ id: `${idPrefix}-name`, element, indicator, component: IndicatorNameSelect, isEdited: isSelectEntryEdited });
 
@@ -40,7 +79,10 @@ export function getSustainabilityProps(element) {
       entries.push(...specificProps);
     }
 
-    entries.push({ id: `${idPrefix}-remove`, element, indicator, component: RemoveIndicatorButton });
+    entries.push({ 
+      id: `${idPrefix}-section-footer`, 
+      component: IndicatorSectionFooter 
+    });
   });
 
   return entries;
