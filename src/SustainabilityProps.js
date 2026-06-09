@@ -2,15 +2,14 @@ import { h } from '@bpmn-io/properties-panel/preact';
 import htm from 'htm';
 import { isSelectEntryEdited } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getSustData, getConfig, removeIndicatorNode } from './utils/SustainabilityHelpers';
-import { AddIndicatorButton, IndicatorNameSelect } from './components/SustainabilityButtons';
+import { getSustData, getConfig, getValuesConfig, removeIndicatorNode } from './utils/SustainabilityHelpers';
+import { AddIndicatorButton, IndicatorValueSelect, IndicatorNameSelect } from './components/SustainabilityButtons';
 import CalculatedIndicatorProps from './logic/CalculatedIndicatorProps';
 import RawIndicatorProps from './logic/RawIndicatorProps';
 
 const html = htm.bind(h);
 
-/** 
- * L'Header: Stile solido con sfondo grigio e barra verde a sinistra.
+/** * L'Header: Solid styling with a green side-bar.
  */
 function IndicatorSectionHeader(props) {
   const { element, indicator, index, total, indicatorConfig } = props;
@@ -19,7 +18,7 @@ function IndicatorSectionHeader(props) {
   const indicatorNum = total - index;
   
   const icon = indicatorConfig ? indicatorConfig.icon : '📌';
-  const label = indicatorConfig ? indicatorConfig.label : 'Indicator';
+  const label = indicatorConfig ? indicatorConfig.label : 'New Metric';
 
   return html`
     <div style="margin-top: 30px; margin-bottom: 10px; padding: 8px 10px; background: #f1f3f4; border-radius: 4px; border-left: 4px solid #28a745; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
@@ -35,8 +34,7 @@ function IndicatorSectionHeader(props) {
   `;
 }
 
-/** 
- * Il Footer: Tratteggio scuro e visibile per chiudere la sezione
+/** * Il Footer: Visual divider to close the section
  */
 function IndicatorSectionFooter() {
   return html`
@@ -48,6 +46,7 @@ export function getSustainabilityProps(element) {
   const sustData = getSustData(element.businessObject);
   const indicators = sustData?.get('indicators') || [];
   const config = getConfig();
+  const valuesConfig = getValuesConfig();
   
   const entries = [{ id: 'add-sustainability-indicator-btn', component: AddIndicatorButton, element }];
 
@@ -69,8 +68,13 @@ export function getSustainabilityProps(element) {
       component: IndicatorSectionHeader 
     });
 
+    // 1. The Value category selector (Always rendered)
+    entries.push({ id: `${idPrefix}-value`, element, indicator, component: IndicatorValueSelect, isEdited: isSelectEntryEdited });
+
+    // 2. The Indicator selector (Always rendered, handles filtering internally)
     entries.push({ id: `${idPrefix}-name`, element, indicator, component: IndicatorNameSelect, isEdited: isSelectEntryEdited });
 
+    // 3. Render raw or calculated props once the indicator name is selected
     if (indicatorConfig) {
       const measurements = indicator.get('measurements') || [];
       const specificProps = indicatorConfig.type === 'calculated' 

@@ -20,6 +20,8 @@
       "properties": [
         { "name": "name", "isAttr": true, "type": "String" },
         { "name": "type", "isAttr": true, "type": "String" },
+        { "name": "valueCategory", "isAttr": true, "type": "String" },
+        { "name": "dimensions", "isAttr": true, "type": "String" },
         { "name": "formulaId", "isAttr": true, "type": "String" },
         { "name": "formula", "isAttr": true, "type": "String" },
         { "name": "measurements", "type": "Measurement", "isMany": true }

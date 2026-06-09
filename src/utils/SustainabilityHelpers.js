@@ -2,11 +2,16 @@
  * Utility functions for managing sustainability data, validating inputs, and executing formulas securely.
  */
 import configJson from '../../indicatorsConfig.json';
+import valuesConfigJson from '../../valuesConfig.json';
 
 const formulaCache = new Map();
 
 export function getConfig() {
   return configJson;
+}
+
+export function getValuesConfig() {
+  return valuesConfigJson;
 }
 
 export function getSustData(businessObject) {
@@ -35,10 +40,9 @@ export function createIndicatorNode(element, bpmnFactory, modeling) {
   }
 
   const newIndicator = bpmnFactory.create('sust:Indicator', {
-    name: '', type: '', formulaId: '', formula: '', measurements: []
+    name: '', type: '', valueCategory: '', dimensions: '', formulaId: '', formula: '', measurements: []
   });
 
-  // FIXED: Prepend new indicator so it appears at the TOP of the properties panel
   const newIndicators = [newIndicator, ...(sustData.get('indicators') || [])];
   modeling.updateModdleProperties(element, sustData, { indicators: newIndicators });
 }

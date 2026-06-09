@@ -1,10 +1,10 @@
 /**
- * Preact UI components for adding and selecting indicators.
+ * Preact UI components for adding and selecting indicators and values.
  */
 import { html } from 'htm/preact';
 import { SelectEntry } from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-import { getConfig, createIndicatorNode, updateModdleProp } from '../utils/SustainabilityHelpers';
+import { getConfig, getValuesConfig, createIndicatorNode, updateModdleProp } from '../utils/SustainabilityHelpers';
 
 /**
  * Renders the button to add a new sustainability indicator.
@@ -24,15 +24,58 @@ export function AddIndicatorButton(props) {
 }
 
 /**
- * Renders the dropdown to select the type/name of the indicator.
+ * Renders the dropdown to select the Value Category, automatically binding dimensions.
+ */
+export function IndicatorValueSelect(props) {
+  const { element, id, indicator } = props;
+  const modeling = useService('modeling');
+  const translate = useService('translate');
+  const valuesConfig = getValuesConfig();
+
+  const getValue = () => indicator.get('valueCategory') || '';
+  
+  const setValue = value => {
+    if (!value) {
+      return updateModdleProp(modeling, element, indicator, { valueCategory: '', dimensions: '', name: '', type: '', formulaId: '', formula: '', measurements: [] });
+    }
+
+    // Safety check just in case valuesConfig is malformed
+    const safeValues = valuesConfig?.values || [];
+    const selectedValueConfig = safeValues.find(v => v.id === value);
+    const dimensionsStr = selectedValueConfig && selectedValueConfig.dimensions ? selectedValueConfig.dimensions.join(', ') : '';
+
+    updateModdleProp(modeling, element, indicator, { 
+      valueCategory: value, 
+      dimensions: dimensionsStr,
+      name: '', type: '', formulaId: '', formula: '', measurements: []
+    });
+  };
+
+  const getOptions = () => {
+    const safeValues = valuesConfig?.values || [];
+    return [
+      { label: '< Select a Value >', value: '' },
+      ...safeValues.map(val => ({ label: val.label, value: val.id }))
+    ];
+  };
+
+  return html`<${SelectEntry} id=${id} element=${element} label=${translate('Target Value')} getValue=${getValue} setValue=${setValue} getOptions=${getOptions} />`;
+}
+
+/**
+ * Renders the dropdown to select the type/name of the indicator, filtered by the chosen Value.
  */
 export function IndicatorNameSelect(props) {
   const { element, id, indicator } = props;
   const modeling = useService('modeling');
   const translate = useService('translate');
   const bpmnFactory = useService('bpmnFactory');
+  
   const config = getConfig();
+  const valuesConfig = getValuesConfig();
 
+  const currentValueCategory = indicator.get('valueCategory');
+  
   const getValue = () => indicator.get('name') || '';
   
   const setValue = value => {
@@ -54,10 +97,28 @@ export function IndicatorNameSelect(props) {
     });
   };
 
-  const getOptions = () => [
-    { label: '< Select an indicator >', value: '' },
-    ...config.indicators.map(ind => ({ label: ind.label, value: ind.id }))
-  ];
+  const getOptions = () => {
+    if (!currentValueCategory) {
+      return [{ label: '< Select a Value first >', value: '' }];
+    }
 
-  return html`<${SelectEntry} id=${id} element=${element} label=${translate('Indicator')} getValue=${getValue} setValue=${setValue} getOptions=${getOptions} />`;
+    const valueConfig = valuesConfig.values.find(v => v.id === currentValueCategory);
+    let filteredIndicators = [];
+
+    if (valueConfig && valueConfig.indicators && valueConfig.indicators.length > 0) {
+      filteredIndicators = config.indicators.filter(ind => valueConfig.indicators.includes(ind.id));
+    } else {
+      // If "other" is selected, or no specific indicators are listed, show all indicators 
+      // that are NOT assigned to any specific value category.
+      const assignedIndicatorIds = valuesConfig.values.flatMap(v => v.indicators || []);
+      filteredIndicators = config.indicators.filter(ind => !assignedIndicatorIds.includes(ind.id));
+    }
+
+    return [
+      { label: '< Select an indicator >', value: '' },
+      ...filteredIndicators.map(ind => ({ label: ind.label, value: ind.id }))
+    ];
+  };
+
+  return html`<${SelectEntry} id=${id} element=${element} label=${translate('Indicator Metric')} getValue=${getValue} setValue=${setValue} getOptions=${getOptions} />`;
 }
