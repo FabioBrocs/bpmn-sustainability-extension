@@ -1,17 +1,16 @@
 /**
  * Utility functions for managing sustainability data, validating inputs, and executing formulas securely.
  */
-import configJson from '../../indicatorsConfig.json';
-import valuesConfigJson from '../../valuesConfig.json';
+import dictionary from '../../sustainability-dictionary.json';
 
 const formulaCache = new Map();
 
 export function getConfig() {
-  return configJson;
+  return { indicators: dictionary.indicators };
 }
 
 export function getValuesConfig() {
-  return valuesConfigJson;
+  return { values: dictionary.values };
 }
 
 export function getSustData(businessObject) {
@@ -190,10 +189,11 @@ export function extractMeasurementValue(measurement) {
 
 export function evaluateFormula(formula, varsMap) {
   if (!formula || !formula.trim()) return 'Calc Err';
-  if (!/^[a-zA-Z0-9_.\s+\-*/()^]+$/.test(formula)) return 'Syntax Err';
+  if (!/^[a-zA-Z0-9_.\s+\-*/()^<>!=?:&|]+$/.test(formula)) return 'Syntax Err';
 
   const validVars = Object.keys(varsMap);
   const wordsInFormula = formula.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+  
   if (wordsInFormula.some(word => !validVars.includes(word))) return 'Syntax Err';
 
   const varNamesSorted = validVars.slice().sort();

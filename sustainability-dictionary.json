@@ -1,0 +1,136 @@
+{
+  "_readme": [
+    "--- SUSTAINABILITY DICTIONARY GUIDE ---",
+    "1. TO ADD A DIMENSION: Add an object to the 'dimensions' array with 'id' and 'label'.",
+    "2. TO ADD A VALUE CATEGORY: Add to 'values'. Map it to 'dimensions' and list the 'indicators' it uses.",
+    "3. TO ADD A RAW SENSOR: Add to 'indicators' -> set 'type' to 'raw'. Define 'chartConfig' (min/max/color).",
+    "4. TO ADD A CALCULATED FORMULA: Add to 'indicators' -> set 'type' to 'calculated'. Define 'formulas' with 'expression' (use basic math or ternary operators like T > 20 ? 1 : 0).",
+    "5. FOR TEXTUAL/CATEGORICAL CHARTS: Add a 'categoryMapping' to the indicator (e.g., { \"1\": \"Cold\", \"2\": \"Good\" }). The DB will save the number, the Dashboard will show the text."
+  ],
+  "version": "2.0.1",
+  "dimensions": [
+    { "id": "Individual", "label": "Individual" },
+    { "id": "Social", "label": "Social" },
+    { "id": "Economic", "label": "Economic" },
+    { "id": "Technical", "label": "Technical" },
+    { "id": "Environmental", "label": "Environmental" }
+  ],
+  "values": [
+    {
+      "id": "improving_comfort",
+      "label": "Improving Comfort",
+      "dimensions": ["Individual", "Social"],
+      "indicators": ["temperature", "humidity", "thermal_sensation", "temperature_comfort"]
+    },
+    {
+      "id": "resource_conservation",
+      "label": "Reducing Energy Consumption",
+      "dimensions": ["Environmental", "Economic", "Technical"],
+      "indicators": ["energy_usage", "carbon_footprint", "light_level"]
+    },
+    {
+      "id": "other",
+      "label": "Other Metrics",
+      "dimensions": ["Individual", "Social", "Environmental", "Economic", "Technical"],
+      "indicators": ["temperature", "humidity", "thermal_sensation", "temperature_comfort", "energy_usage", "carbon_footprint", "light_level"]
+    }
+  ],
+  "indicators": [
+    {
+      "id": "humidity",
+      "label": "Humidity",
+      "icon": "💧",
+      "type": "raw",
+      "dimensions": ["Environmental", "Social"],
+      "chartConfig": { "min": 0, "max": 100, "color": "#007bff" },
+      "allowedUnits": [ { "value": "%", "label": "Percentage (%)" } ]
+    },
+    {
+      "id": "temperature",
+      "label": "Temperature",
+      "icon": "🌡️",
+      "type": "raw",
+      "dimensions": ["Environmental", "Social", "Technical"],
+      "chartConfig": { "min": -10, "max": 60, "color": "#dc3545" },
+      "allowedUnits": [ { "value": "°C", "label": "Celsius (°C)" }, { "value": "F", "label": "Fahrenheit (°F)" } ]
+    },
+    {
+      "id": "light_level",
+      "label": "Light Level",
+      "icon": "☀️",
+      "type": "raw",
+      "dimensions": ["Environmental", "Economic", "Technical"],
+      "chartConfig": { "min": 0, "max": 1000, "color": "#ffc107" },
+      "allowedUnits": [ { "value": "lux", "label": "Lux" } ]
+    },
+    {
+      "id": "energy_usage",
+      "label": "Energy Usage",
+      "icon": "⚡",
+      "type": "raw",
+      "dimensions": ["Environmental", "Economic", "Technical"],
+      "chartConfig": { "min": 0, "max": 500, "color": "#28a745" },
+      "allowedUnits": [ { "value": "kWh", "label": "Kilowatt-hours (kWh)" }, { "value": "W", "label": "Watts (W)" } ]
+    },
+    {
+      "id": "carbon_footprint",
+      "label": "Carbon Footprint",
+      "icon": "🌱",
+      "type": "raw",
+      "dimensions": ["Environmental", "Economic"],
+      "chartConfig": { "min": 0, "max": 100, "color": "#6c757d" },
+      "allowedUnits": [ { "value": "kgCO2e", "label": "kg CO2 equivalent" } ]
+    },
+    {
+      "id": "thermal_sensation",
+      "label": "Thermal Sensation",
+      "icon": "🧠",
+      "type": "calculated",
+      "dimensions": ["Individual", "Social"],
+      "chartConfig": { "min": 0, "max": 50, "color": "#17a2b8" },
+      "formulas": [
+        {
+          "id": "cold_climate",
+          "label": "Thermal Sensation (Cold <=10°C)",
+          "expression": "13.12 + 0.6215 * T - 11.37 * (V^0.16) + 0.3965 * T * (V^0.16)",
+          "variables": [
+            { "id": "T", "unit": "°C", "description": "Temperature" },
+            { "id": "V", "unit": "km/h", "description": "Wind" }
+          ]
+        },
+        {
+          "id": "hot_climate",
+          "label": "Thermal Sensation (Hot >=27°C)",
+          "expression": "-8.784694 + 1.61139411 * T + 2.33854883 * H - 0.14611605 * T * H - 0.012308094 * (T^2) - 0.016424827 * (H^2) + 0.002211732 * (T^2) * H + 0.00072546 * T * (H^2) - 0.000003582 * (T^2) * (H^2)",
+          "variables": [
+            { "id": "T", "unit": "°C", "description": "Temperature" },
+            { "id": "H", "unit": "%", "description": "Humidity" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "temperature_comfort",
+      "label": "Temperature Comfort",
+      "icon": "😌",
+      "type": "calculated",
+      "dimensions": ["Individual", "Social"],
+      "chartConfig": { "min": 0, "max": 4, "color": "#fd7e14" },
+      "categoryMapping": {
+        "1": "Too Cold",
+        "2": "Perfect",
+        "3": "Too Hot"
+      },
+      "formulas": [
+        {
+          "id": "comfort_index",
+          "label": "Basic Comfort Index",
+          "expression": "T < 20 ? 1 : (T > 25 ? 3 : 2)",
+          "variables": [
+            { "id": "T", "unit": "°C", "description": "Temperature" }
+          ]
+        }
+      ]
+    }
+  ]
+}
