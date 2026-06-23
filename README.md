@@ -1,4 +1,4 @@
-# 🌱 Camunda Modeler Sustainability Extension
+# Camunda Modeler Sustainability Extension
 
 [[Compatible with bpmn-js]](https://github.com/bpmn-io/bpmn-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -12,7 +12,7 @@ This plugin is **Part 1 of a 3-Tier Architecture**:
 
 ---
 
-## ✨ Features
+## Features
 
 -   **Dynamic Properties Panel:** Select sustainability goals (e.g., *Improving Comfort*, *Reducing Energy*) and assign context-aware indicators (e.g., *Temperature*, *Carbon Footprint*).
 -   **Canvas Overlays:** Interactive "Leaf" badges appear on the BPMN canvas for tasks containing sustainability data. Click to reveal real-time configurations.
@@ -22,7 +22,7 @@ This plugin is **Part 1 of a 3-Tier Architecture**:
 
 ---
 
-## ⚙️ Installation & Usage
+## Installation & Usage
 
 This extension can be used within a custom web-based BPMN modeler or as a standalone plugin for the Camunda Desktop Modeler.
 
@@ -104,7 +104,7 @@ npm run build
 
 ---
 
-## ⚠️ Important: BPMN XML Namespace
+## Important: BPMN XML Namespace
 
 Ensure your target BPMN XML file includes the `sust` namespace in the `<bpmn:definitions>` node, otherwise the modeler will strip out the extension elements upon saving:
 
@@ -114,7 +114,7 @@ Ensure your target BPMN XML file includes the `sust` namespace in the `<bpmn:def
 
 ---
 
-## 📖 The Master Dictionary Guide
+## The Master Dictionary Guide
 
 The heart of the entire ecosystem is the `sustainability-dictionary.json` file. Updating this file instantly updates the Modeler menus, the Java calculation engine, and the React Dashboard charts.
 
@@ -202,5 +202,5 @@ If you want the dashboard to display **Words instead of Numbers** on the Y-Axis 
 
 ---
 
-## 📄 License
+## License
 MIT License
