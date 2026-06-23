@@ -8,7 +8,7 @@ A custom extension for the **Camunda Modeler** that enables process designers to
 This plugin is **Part 1 of a 3-Tier Architecture**:
 1.  **Sustainability Extension (This Repo):** The UI to model the metrics in Camunda.
 2.  **[Spring Boot Sustainability Engine](https://github.com/FabioBrocs/bpmn-sustainability-engine):** The Java backend that parses the BPMN, evaluates SpEL formulas, and generates IoT sensor data.
-3.  **[Sustainability Analytics Dashboard]([Inserisci-Link-Qui](https://github.com/FabioBrocs/bpmn-sustainability-dashboard)):** The React application that renders real-time data, textual metrics, and cross-compares process executions.
+3.  **[Sustainability Analytics Dashboard](https://github.com/FabioBrocs/bpmn-sustainability-dashboard):** The React application that renders real-time data, textual metrics, and cross-compares process executions.
 
 ---
 
