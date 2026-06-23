@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+dist-desktop/
 
 # npm package archives (simulated releases)
 *.tgz
@@ -26,3 +27,7 @@ Thumbs.db
 # IDE / Editor folders
 .vscode/
 .idea/
+
+# Webpack/Babel cache
+.eslintcache
+.babel-cache/

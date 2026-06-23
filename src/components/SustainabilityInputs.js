@@ -128,7 +128,6 @@ export function AggregationStrategySelector(props) {
   const activeTab = isCustom ? 'CUSTOM' : currentFormula;
 
   const setStrategy = (strat) => {
-    // FIXED: Inserted clear example string
     updateModdleProp(modeling, element, measurement, { formula: strat === 'CUSTOM' ? 'sens_01 + sens_02' : strat });
     syncCalculatedValues(modeling, element);
   };

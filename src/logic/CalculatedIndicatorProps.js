@@ -62,7 +62,6 @@ export default function CalculatedIndicatorProps(element, indicator, indicatorCo
     const varLabel = varObj.unit ? `${varId} (${varObj.unit})` : varId;
     const varIdPrefix = `${idPrefix}-var-${varId}`;
 
-    // Le variabili ora sono compatte, con il nome passato direttamente come "label" 
     entries.push({
       id: `${varIdPrefix}-source`,
       element,

@@ -1,9 +1,7 @@
-/**
- * Utility functions for managing sustainability data, validating inputs, and executing formulas securely.
- */
+/** Utility functions for managing sustainability data, validating inputs, and executing formulas. */
 import dictionary from '../../sustainability-dictionary.json';
+import { evaluate } from 'mathjs';
 
-const formulaCache = new Map();
 
 export function getConfig() {
   return { indicators: dictionary.indicators };
@@ -189,26 +187,9 @@ export function extractMeasurementValue(measurement) {
 
 export function evaluateFormula(formula, varsMap) {
   if (!formula || !formula.trim()) return 'Calc Err';
-  if (!/^[a-zA-Z0-9_.\s+\-*/()^<>!=?:&|]+$/.test(formula)) return 'Syntax Err';
-
-  const validVars = Object.keys(varsMap);
-  const wordsInFormula = formula.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
-  
-  if (wordsInFormula.some(word => !validVars.includes(word))) return 'Syntax Err';
-
-  const varNamesSorted = validVars.slice().sort();
-  const cacheKey = `${formula}_${varNamesSorted.join(',')}`;
 
   try {
-    let fn = formulaCache.get(cacheKey);
-    if (!fn) {
-      const jsSafeFormula = formula.replace(/\^/g, '**');
-      fn = new Function(...varNamesSorted, `"use strict"; return Number(${jsSafeFormula});`);
-      formulaCache.set(cacheKey, fn);
-    }
-
-    const varValues = varNamesSorted.map(v => varsMap[v]);
-    const result = fn(...varValues);
+    const result = evaluate(formula, varsMap);
 
     if (!Number.isFinite(result)) return 'Calc Err';
     return Number.isInteger(result) ? result.toString() : result.toFixed(2);

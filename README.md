@@ -1,30 +1,35 @@
-# bpmn-sustainability-extension
+# 🌱 Camunda Modeler Sustainability Extension
 
 [[Compatible with bpmn-js]](https://github.com/bpmn-io/bpmn-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A BPMN 2.0 extension and properties panel module for modeling, tracking, and visualizing sustainability data in IoT-enhanced business processes.
+A custom extension for the **Camunda Modeler** that enables process designers to model, calculate, and monitor Sustainability Metrics directly onto BPMN diagrams. 
 
-This extension allows process modelers to attach environmental indicators (such as energy usage, carbon footprint, temperature, and thermal sensation) directly to BPMN elements. It provides a seamless UI within the properties panel, allowing users to categorize indicators by Values, and renders dynamic, formula-driven badges directly on the BPMN canvas.
-
-
-## Features
-
-
-* **BPMN 2.0 Compliant:** Extends the standard BPMN metamodel via a custom `sust` namespace without breaking standard execution engines (e.g., Camunda).
-* **Multi-Dimensional Categorization:** Group indicators by Target Values (e.g., *Improving Comfort*, *Reducing Energy Consumption*) and automatically bind them to sustainability Dimensions (e.g., *Environmental, Social, Economic*). Metadata is saved directly in the XML for runtime analytics.
-* **Properties Panel Integration:** A dedicated UI group to add, configure, and remove indicators with dynamic dropdown filtering.
-* **Raw & Calculated Indicators:** Supports raw sensor data tracking or complex, formula-based calculated metrics (e.g., Thermal Sensation).
-* **Data Aggregation:** Built-in support for 1-to-N sensor aggregations (`AVG`, `SUM`, `MIN`, `MAX`, or `CUSTOM` formulas).
-* **Canvas Overlays:** Real-time visual badges on BPMN shapes that summarize sustainability metrics and flag missing sensor configurations.
+This plugin is **Part 1 of a 3-Tier Architecture**:
+1.  **Sustainability Extension (This Repo):** The UI to model the metrics in Camunda.
+2.  **[Spring Boot Sustainability Engine](https://github.com/FabioBrocs/bpmn-sustainability-engine):** The Java backend that parses the BPMN, evaluates SpEL formulas, and generates IoT sensor data.
+3.  **[Sustainability Analytics Dashboard](Inserisci-Link-Qui):** The React application that renders real-time data, textual metrics, and cross-compares process executions.
 
 ---
 
+## ✨ Features
 
-## Requirements
+-   **Dynamic Properties Panel:** Select sustainability goals (e.g., *Improving Comfort*, *Reducing Energy*) and assign context-aware indicators (e.g., *Temperature*, *Carbon Footprint*).
+-   **Canvas Overlays:** Interactive "Leaf" badges appear on the BPMN canvas for tasks containing sustainability data. Click to reveal real-time configurations.
+-   **Raw & Calculated Indicators:** Define raw sensors (IoT inputs) or build calculated formulas (e.g., *Thermal Sensation Index*) evaluated directly in the properties panel.
+-   **Sensor Aggregation:** Aggregate multiple child sensors into a single node using `AVG`, `SUM`, `MIN`, `MAX`, or custom math strings.
+-   **Master Dictionary Driven:** The entire UI is driven by a single `sustainability-dictionary.json` file shared across the architecture.
 
+---
+
+## ⚙️ Installation & Usage
+
+This extension can be used within a custom web-based BPMN modeler or as a standalone plugin for the Camunda Desktop Modeler.
+
+### Option A: Custom Web Modeler (NPM)
+
+**Requirements:**
 To run this extension, your project must have a modern JavaScript bundler (like Webpack) and the following minimum peer dependencies installed:
-
 
 * **`bpmn-js`**: `>= 18.15.0`
 * **`bpmn-js-properties-panel`**: `>= 5.54.0`
@@ -32,52 +37,16 @@ To run this extension, your project must have a modern JavaScript bundler (like 
 * **`preact`**: `>= 10.29.1`
 * **`htm`**: `>= 3.1.1`
 
-*Example of a minimal `package.json` setup:*
+**1. Install the extension and dependencies:**
 
-~~~json
-{
-  "dependencies": {
-    "@bpmn-io/properties-panel": "^3.41.2",
-    "bpmn-js": "^18.15.0",
-    "bpmn-js-properties-panel": "^5.54.0",
-    "bpmn-sustainability-extension": "file:../path-to/bpmn-sustainability-extension-1.0.1.tgz",
-    "htm": "^3.1.1",
-    "preact": "^10.29.1"
-  },
-  "devDependencies": {
-    "html-webpack-plugin": "^5.6.7",
-    "webpack": "^5.106.2",
-    "webpack-cli": "^7.0.2",
-    "webpack-dev-server": "^5.2.3"
-  }
-}
-~~~
-
----
-
-
-## Installation
-
-Install the extension via npm (either from a registry or a local tarball):
-
-~~~bash
+```bash
 npm install bpmn-sustainability-extension
-~~~
-
-Ensure your peer dependencies are also installed:
-
-~~~bash
 npm install bpmn-js bpmn-js-properties-panel @bpmn-io/properties-panel htm preact
-~~~
+```
 
----
+**2. Inject the extension into your BpmnModeler:**
 
-
-## Usage
-
-To use the extension, you need to inject it into your `BpmnModeler` instance alongside the standard properties panel modules. You must also provide the custom Moddle extension.
-
-~~~javascript
+```javascript
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import { 
   BpmnPropertiesPanelModule, 
@@ -108,53 +77,130 @@ const modeler = new BpmnModeler({
 modeler.importXML(yourXML).then(() => {
   console.log('Modeler loaded with sustainability features!');
 });
-~~~
+```
 
+### Option B: Camunda Desktop Modeler Plugin
 
-### BPMN XML Namespace
+To use this extension in the official Camunda 7 Desktop Modeler, you need to build the desktop-specific bundle to prevent UI framework collisions.
 
-Ensure your target BPMN XML file includes the `sust` namespace in the definitions node, otherwise the modeler will strip out the extension elements:
-
-~~~xml
-<bpmn:definitions xmlns:sust="http://sustainability" ... >
-~~~
-
----
-
-
-## Configuration Files
-
-The extension relies on two JSON files for its business logic and UI population:
-
-
-* **`valuesConfig.json`**: Defines the higher-level Values (e.g., Improving Comfort) and the Dimensions they impact. It dictates which indicators are available when a value is selected.
-* **`indicatorsConfig.json`**: Defines the technical specifics of each metric (icons, units, calculated formulas, and required variables).
-
-*If you fork this project, you can easily add new indicators or dimensions by editing these files.*
-
----
-
-
-## Building the Extension
-
-If you want to build the extension from source for your own usage:
-
-
-* Clone the repository.
-* Install dependencies:
-
-~~~bash
+**1. Clone and Build:**
+```bash
+git clone <this-repository-url>
+cd bpmn-sustainability-extension
 npm install
-~~~
-
-
-* Build the project (compiles assets and creates the `dist` folder):
-
-~~~bash
 npm run build
-~~~
+```
+*(This will generate the compiled `client.js` file inside the `dist-desktop` folder).*
 
+**2. Install in Camunda:**
+1. Navigate to your Camunda Modeler plugins directory:
+   - **Windows:** `%APPDATA%\camunda-modeler\plugins\`
+   - **Mac:** `~/Library/Application Support/camunda-modeler/plugins/`
+   - **Linux:** `~/.config/camunda-modeler/plugins/`
+2. Create a new folder named `bpmn-sustainability-extension`.
+3. Copy the predefined **`index.js`** file from the repository's `desktop-plugin/` folder into this new directory.
+4. Copy the newly compiled **`client.js`** from the `dist-desktop/` folder into the same directory.
+5. Restart the Camunda Modeler.
 
-## License
+---
 
-MIT
+## ⚠️ Important: BPMN XML Namespace
+
+Ensure your target BPMN XML file includes the `sust` namespace in the `<bpmn:definitions>` node, otherwise the modeler will strip out the extension elements upon saving:
+
+```xml
+<bpmn:definitions xmlns:sust="http://sustainability" ... >
+```
+
+---
+
+## 📖 The Master Dictionary Guide
+
+The heart of the entire ecosystem is the `sustainability-dictionary.json` file. Updating this file instantly updates the Modeler menus, the Java calculation engine, and the React Dashboard charts.
+
+### 1. Dimensions & Values
+Organize your indicators by adding to the `dimensions` and `values` arrays:
+```json
+"dimensions": [
+  { "id": "Environmental", "label": "Environmental" },
+  { "id": "Social", "label": "Social" }
+],
+"values": [
+  {
+    "id": "improving_comfort",
+    "label": "Improving Comfort",
+    "dimensions": ["Individual", "Social"],
+    "indicators": ["temperature", "thermal_sensation"]
+  }
+]
+```
+
+### 2. Adding a RAW Indicator (IoT Sensors)
+Used for direct sensor readings. You must provide a `chartConfig` for the dashboard rendering.
+```json
+{
+  "id": "humidity",
+  "label": "Humidity",
+  "icon": "💧",
+  "type": "raw",
+  "chartConfig": { "min": 0, "max": 100, "color": "#007bff" },
+  "allowedUnits": [ { "value": "%", "label": "Percentage (%)" } ]
+}
+```
+
+### 3. Adding a CALCULATED Indicator (Formulas)
+Used to derive complex metrics from raw sensors. The Modeler evaluates these via JS, while the Spring Boot backend evaluates them via **SpEL**.
+*Note: Standard math operations `(+, -, *, /, ^)` and ternary operators `(? :)` are natively supported.*
+
+```json
+{
+  "id": "thermal_sensation",
+  "label": "Thermal Sensation",
+  "icon": "🧠",
+  "type": "calculated",
+  "chartConfig": { "min": 0, "max": 50, "color": "#17a2b8" },
+  "formulas": [
+    {
+      "id": "hot_climate",
+      "label": "Thermal Sensation (Hot >=27°C)",
+      "expression": "-8.7846 + 1.6113 * T + 2.3385 * H - 0.1461 * T * H",
+      "variables": [
+        { "id": "T", "unit": "°C", "description": "Temperature" },
+        { "id": "H", "unit": "%", "description": "Humidity" }
+      ]
+    }
+  ]
+}
+```
+
+### 4. Categorical Mapping (Textual Charts)
+If you want the dashboard to display **Words instead of Numbers** on the Y-Axis (e.g., "Too Hot" instead of "3"), use a ternary formula alongside a `categoryMapping`:
+
+```json
+{
+  "id": "temperature_comfort",
+  "label": "Temperature Comfort",
+  "icon": "😌",
+  "type": "calculated",
+  "chartConfig": { "min": 0, "max": 4, "color": "#fd7e14" },
+  "categoryMapping": {
+    "1": "Too Cold",
+    "2": "Perfect",
+    "3": "Too Hot"
+  },
+  "formulas": [
+    {
+      "id": "comfort_index",
+      "label": "Basic Comfort Index",
+      "expression": "T < 20 ? 1 : (T > 25 ? 3 : 2)",
+      "variables": [ { "id": "T", "unit": "°C" } ]
+    }
+  ]
+}
+```
+*(In this example, the Java Engine saves `1, 2, or 3` in the Database, but the React Dashboard translates those digits dynamically into the assigned text labels).*
+
+---
+
+## 📄 License
+MIT License

@@ -39,7 +39,6 @@ export function IndicatorValueSelect(props) {
       return updateModdleProp(modeling, element, indicator, { valueCategory: '', dimensions: '', name: '', type: '', formulaId: '', formula: '', measurements: [] });
     }
 
-    // Safety check just in case valuesConfig is malformed
     const safeValues = valuesConfig?.values || [];
     const selectedValueConfig = safeValues.find(v => v.id === value);
     const dimensionsStr = selectedValueConfig && selectedValueConfig.dimensions ? selectedValueConfig.dimensions.join(', ') : '';
@@ -108,8 +107,6 @@ export function IndicatorNameSelect(props) {
     if (valueConfig && valueConfig.indicators && valueConfig.indicators.length > 0) {
       filteredIndicators = config.indicators.filter(ind => valueConfig.indicators.includes(ind.id));
     } else {
-      // If "other" is selected, or no specific indicators are listed, show all indicators 
-      // that are NOT assigned to any specific value category.
       const assignedIndicatorIds = valuesConfig.values.flatMap(v => v.indicators || []);
       filteredIndicators = config.indicators.filter(ind => !assignedIndicatorIds.includes(ind.id));
     }
